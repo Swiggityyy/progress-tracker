@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Progress Tracker Forum</title>
+    <link rel="icon" type="image/png" id="favicon">
+    <script>
+        // Set a cute cat favicon that changes daily
+        (function() {
+            const today = new Date();
+            const dateString = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+            const favicon = document.getElementById('favicon');
+            // Using Robohash with set4 (cats) - generates a different cute cat each day
+            favicon.href = 'https://robohash.org/' + dateString + '?set=set4&size=64x64';
+        })();
+    </script>
     <style>
         * {
             margin: 0;
