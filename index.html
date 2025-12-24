@@ -161,6 +161,15 @@
             font-weight: 500;
         }
 
+        .edit-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #5568d3;
+        }
+
         .delete-btn {
             background: #dc3545;
             color: white;
@@ -387,7 +396,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, push, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -408,6 +417,7 @@
         class ProgressTracker {
             constructor() {
                 this.entries = [];
+                this.editingEntryId = null;
                 this.init();
             }
 
@@ -584,11 +594,19 @@
                     meta.appendChild(timeInfoDiv);
                 }
 
-                // Delete button (only show for own posts)
+                // Edit and Delete buttons (only show for own posts)
                 const savedName = localStorage.getItem('userName');
                 if (savedName && savedName === entry.userName) {
                     const actions = document.createElement('div');
                     actions.className = 'entry-actions';
+
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'edit-btn';
+                    editBtn.textContent = 'Edit';
+                    editBtn.addEventListener('click', () => {
+                        this.openEditModal(entry);
+                    });
+                    actions.appendChild(editBtn);
 
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'delete-btn';
@@ -621,6 +639,7 @@
             }
 
             openAddModal() {
+                this.editingEntryId = null;
                 document.getElementById('modalTitle').textContent = 'Share Your Progress';
                 document.getElementById('entryForm').reset();
 
@@ -637,8 +656,24 @@
                 document.getElementById('entryModal').classList.add('active');
             }
 
+            openEditModal(entry) {
+                this.editingEntryId = entry.id;
+                document.getElementById('modalTitle').textContent = 'Edit Your Progress';
+
+                // Populate form with entry data
+                document.getElementById('userName').value = entry.userName || '';
+                document.getElementById('description').value = entry.description || '';
+                document.getElementById('entryDate').value = entry.date || '';
+                document.getElementById('startTime').value = entry.startTime || '';
+                document.getElementById('endTime').value = entry.endTime || '';
+                document.getElementById('duration').value = entry.duration || '';
+
+                document.getElementById('entryModal').classList.add('active');
+            }
+
             closeModal() {
                 document.getElementById('entryModal').classList.remove('active');
+                this.editingEntryId = null;
             }
 
             saveEntry() {
@@ -672,25 +707,48 @@
                     duration = this.calculateDuration(startTime, endTime);
                 }
 
-                const entry = {
-                    userName,
-                    description,
-                    date,
-                    startTime: startTime || null,
-                    endTime: endTime || null,
-                    duration,
-                    createdAt: Date.now()
-                };
+                if (this.editingEntryId) {
+                    // Update existing entry
+                    const entryRef = ref(database, `entries/${this.editingEntryId}`);
+                    const updates = {
+                        userName,
+                        description,
+                        date,
+                        startTime: startTime || null,
+                        endTime: endTime || null,
+                        duration,
+                        updatedAt: Date.now()
+                    };
 
-                // Push to Firebase
-                push(entriesRef, entry)
-                    .then(() => {
-                        this.closeModal();
-                    })
-                    .catch((error) => {
-                        console.error('Error saving entry:', error);
-                        alert('Failed to save entry. Please try again.');
-                    });
+                    update(entryRef, updates)
+                        .then(() => {
+                            this.closeModal();
+                        })
+                        .catch((error) => {
+                            console.error('Error updating entry:', error);
+                            alert('Failed to update entry. Please try again.');
+                        });
+                } else {
+                    // Create new entry
+                    const entry = {
+                        userName,
+                        description,
+                        date,
+                        startTime: startTime || null,
+                        endTime: endTime || null,
+                        duration,
+                        createdAt: Date.now()
+                    };
+
+                    push(entriesRef, entry)
+                        .then(() => {
+                            this.closeModal();
+                        })
+                        .catch((error) => {
+                            console.error('Error saving entry:', error);
+                            alert('Failed to save entry. Please try again.');
+                        });
+                }
             }
 
             deleteEntry(entryId) {
