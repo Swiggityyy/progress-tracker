@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progress Tracker</title>
+    <title>Progress Tracker Forum</title>
     <style>
         * {
             margin: 0;
@@ -36,6 +36,12 @@
 
         .header h1 {
             font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
             margin-bottom: 20px;
         }
 
@@ -101,8 +107,26 @@
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
         }
 
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .entry-author {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.05em;
+        }
+
+        .entry-time {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+
         .entry-description {
-            font-size: 1.1em;
+            font-size: 1.05em;
             color: #333;
             margin-bottom: 8px;
             line-height: 1.5;
@@ -117,7 +141,7 @@
             gap: 10px;
         }
 
-        .entry-time {
+        .entry-time-info {
             font-size: 0.9em;
             color: #6c757d;
         }
@@ -135,15 +159,6 @@
             font-size: 0.85em;
             transition: all 0.2s;
             font-weight: 500;
-        }
-
-        .edit-btn {
-            background: #667eea;
-            color: white;
-        }
-
-        .edit-btn:hover {
-            background: #5568d3;
         }
 
         .delete-btn {
@@ -267,9 +282,19 @@
             background: #5a6268;
         }
 
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8em;
+            }
+
+            .header p {
+                font-size: 0.95em;
             }
 
             .add-btn {
@@ -295,27 +320,37 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Progress Tracker</h1>
-            <button class="add-btn" id="addProgressBtn">+ Add Progress</button>
+            <h1>Progress Tracker Forum</h1>
+            <p>Share your daily progress with everyone!</p>
+            <button class="add-btn" id="addProgressBtn">+ Share Progress</button>
         </div>
 
-        <div class="entries-container" id="entriesContainer">
+        <div class="loading" id="loadingState">
+            Loading progress posts...
+        </div>
+
+        <div class="entries-container" id="entriesContainer" style="display: none;">
             <!-- Entries will be rendered here -->
         </div>
 
         <div class="empty-state" id="emptyState" style="display: none;">
-            <p>No progress entries yet.</p>
-            <p style="font-size: 0.95em;">Click "+ Add Progress" to get started!</p>
+            <p>No progress posts yet.</p>
+            <p style="font-size: 0.95em;">Be the first to share your progress!</p>
         </div>
     </div>
 
     <div class="modal" id="entryModal">
         <div class="modal-content">
-            <h2 id="modalTitle">Add Progress</h2>
+            <h2 id="modalTitle">Share Your Progress</h2>
             <form id="entryForm">
                 <div class="form-group">
-                    <label for="description">What did you accomplish? *</label>
-                    <textarea id="description" required></textarea>
+                    <label for="userName">Your Name *</label>
+                    <input type="text" id="userName" required placeholder="Enter your name">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">What did you accomplish today? *</label>
+                    <textarea id="description" required placeholder="Share your progress..."></textarea>
                 </div>
 
                 <div class="form-group">
@@ -342,24 +377,43 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary">Post Progress</button>
                     <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBuQaFRg0UVPAd_SirIGp65DkQsrfM_D7U",
+            authDomain: "progress-tracker-579b7.firebaseapp.com",
+            databaseURL: "https://progress-tracker-579b7-default-rtdb.firebaseio.com",
+            projectId: "progress-tracker-579b7",
+            storageBucket: "progress-tracker-579b7.firebasestorage.app",
+            messagingSenderId: "1020237698400",
+            appId: "1:1020237698400:web:b2c416e5d0dc9a20487a05"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const entriesRef = ref(database, 'entries');
+
         class ProgressTracker {
             constructor() {
-                this.entries = this.loadEntries();
-                this.editingEntryId = null;
+                this.entries = [];
                 this.init();
             }
 
             init() {
-                this.renderEntries();
                 this.attachEventListeners();
+                this.loadEntries();
             }
 
             attachEventListeners() {
@@ -390,6 +444,12 @@
                 document.getElementById('startTime').addEventListener('change', () => {
                     this.autoCalculateDuration();
                 });
+
+                // Load saved name from localStorage
+                const savedName = localStorage.getItem('userName');
+                if (savedName) {
+                    document.getElementById('userName').value = savedName;
+                }
             }
 
             autoCalculateDuration() {
@@ -402,9 +462,30 @@
                 }
             }
 
+            loadEntries() {
+                onValue(entriesRef, (snapshot) => {
+                    const data = snapshot.val();
+                    this.entries = [];
+
+                    if (data) {
+                        Object.keys(data).forEach(key => {
+                            this.entries.push({
+                                id: key,
+                                ...data[key]
+                            });
+                        });
+                    }
+
+                    this.renderEntries();
+                });
+            }
+
             renderEntries() {
                 const container = document.getElementById('entriesContainer');
                 const emptyState = document.getElementById('emptyState');
+                const loadingState = document.getElementById('loadingState');
+
+                loadingState.style.display = 'none';
 
                 if (this.entries.length === 0) {
                     container.style.display = 'none';
@@ -469,42 +550,57 @@
                 const card = document.createElement('div');
                 card.className = 'entry-card';
 
+                // Header with name and time
+                const header = document.createElement('div');
+                header.className = 'entry-header';
+
+                const author = document.createElement('div');
+                author.className = 'entry-author';
+                author.textContent = entry.userName || 'Anonymous';
+                header.appendChild(author);
+
+                const time = document.createElement('div');
+                time.className = 'entry-time';
+                time.textContent = this.formatTimestamp(entry.createdAt);
+                header.appendChild(time);
+
+                card.appendChild(header);
+
+                // Description
                 const description = document.createElement('div');
                 description.className = 'entry-description';
                 description.textContent = entry.description;
                 card.appendChild(description);
 
+                // Meta info
                 const meta = document.createElement('div');
                 meta.className = 'entry-meta';
 
                 const timeInfo = this.getTimeInfo(entry);
                 if (timeInfo) {
-                    const time = document.createElement('div');
-                    time.className = 'entry-time';
-                    time.textContent = timeInfo;
-                    meta.appendChild(time);
+                    const timeInfoDiv = document.createElement('div');
+                    timeInfoDiv.className = 'entry-time-info';
+                    timeInfoDiv.textContent = timeInfo;
+                    meta.appendChild(timeInfoDiv);
                 }
 
-                const actions = document.createElement('div');
-                actions.className = 'entry-actions';
+                // Delete button (only show for own posts)
+                const savedName = localStorage.getItem('userName');
+                if (savedName && savedName === entry.userName) {
+                    const actions = document.createElement('div');
+                    actions.className = 'entry-actions';
 
-                const editBtn = document.createElement('button');
-                editBtn.className = 'edit-btn';
-                editBtn.textContent = 'Edit';
-                editBtn.addEventListener('click', () => {
-                    this.openEditModal(entry.id);
-                });
-                actions.appendChild(editBtn);
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.addEventListener('click', () => {
+                        this.deleteEntry(entry.id);
+                    });
+                    actions.appendChild(deleteBtn);
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.addEventListener('click', () => {
-                    this.deleteEntry(entry.id);
-                });
-                actions.appendChild(deleteBtn);
+                    meta.appendChild(actions);
+                }
 
-                meta.appendChild(actions);
                 card.appendChild(meta);
 
                 return card;
@@ -525,9 +621,14 @@
             }
 
             openAddModal() {
-                this.editingEntryId = null;
-                document.getElementById('modalTitle').textContent = 'Add Progress';
+                document.getElementById('modalTitle').textContent = 'Share Your Progress';
                 document.getElementById('entryForm').reset();
+
+                // Restore saved name
+                const savedName = localStorage.getItem('userName');
+                if (savedName) {
+                    document.getElementById('userName').value = savedName;
+                }
 
                 // Set default date to today
                 const today = new Date().toISOString().split('T')[0];
@@ -536,32 +637,22 @@
                 document.getElementById('entryModal').classList.add('active');
             }
 
-            openEditModal(entryId) {
-                const entry = this.entries.find(e => e.id === entryId);
-                if (!entry) return;
-
-                this.editingEntryId = entryId;
-                document.getElementById('modalTitle').textContent = 'Edit Progress';
-                document.getElementById('description').value = entry.description;
-                document.getElementById('entryDate').value = entry.date;
-                document.getElementById('startTime').value = entry.startTime || '';
-                document.getElementById('endTime').value = entry.endTime || '';
-                document.getElementById('duration').value = entry.duration || '';
-
-                document.getElementById('entryModal').classList.add('active');
-            }
-
             closeModal() {
                 document.getElementById('entryModal').classList.remove('active');
-                this.editingEntryId = null;
             }
 
             saveEntry() {
+                const userName = document.getElementById('userName').value.trim();
                 const description = document.getElementById('description').value.trim();
                 const date = document.getElementById('entryDate').value;
                 const startTime = document.getElementById('startTime').value;
                 const endTime = document.getElementById('endTime').value;
                 let duration = parseInt(document.getElementById('duration').value) || null;
+
+                if (!userName) {
+                    alert('Please enter your name');
+                    return;
+                }
 
                 if (!description) {
                     alert('Please enter a description');
@@ -573,41 +664,43 @@
                     return;
                 }
 
+                // Save name to localStorage for next time
+                localStorage.setItem('userName', userName);
+
                 // Calculate duration if not manually entered but times are provided
                 if (!duration && startTime && endTime) {
                     duration = this.calculateDuration(startTime, endTime);
                 }
 
                 const entry = {
-                    id: this.editingEntryId || Date.now().toString(),
+                    userName,
                     description,
                     date,
                     startTime: startTime || null,
                     endTime: endTime || null,
                     duration,
-                    createdAt: this.editingEntryId ?
-                        this.entries.find(e => e.id === this.editingEntryId).createdAt :
-                        Date.now(),
-                    updatedAt: Date.now()
+                    createdAt: Date.now()
                 };
 
-                if (this.editingEntryId) {
-                    const index = this.entries.findIndex(e => e.id === this.editingEntryId);
-                    this.entries[index] = entry;
-                } else {
-                    this.entries.push(entry);
-                }
-
-                this.saveEntries();
-                this.closeModal();
-                this.renderEntries();
+                // Push to Firebase
+                push(entriesRef, entry)
+                    .then(() => {
+                        this.closeModal();
+                    })
+                    .catch((error) => {
+                        console.error('Error saving entry:', error);
+                        alert('Failed to save entry. Please try again.');
+                    });
             }
 
             deleteEntry(entryId) {
-                if (confirm('Are you sure you want to delete this progress entry?')) {
-                    this.entries = this.entries.filter(e => e.id !== entryId);
-                    this.saveEntries();
-                    this.renderEntries();
+                if (confirm('Are you sure you want to delete this progress post?')) {
+                    const entryRef = ref(database, `entries/${entryId}`);
+                    remove(entryRef)
+                        .catch((error) => {
+                            console.error('Error deleting entry:', error);
+                            alert('Failed to delete entry. Please try again.');
+                        });
                 }
             }
 
@@ -661,23 +754,22 @@
                 }
             }
 
-            loadEntries() {
-                try {
-                    const stored = localStorage.getItem('progressTrackerEntries');
-                    return stored ? JSON.parse(stored) : [];
-                } catch (error) {
-                    console.error('Error loading entries:', error);
-                    return [];
-                }
-            }
+            formatTimestamp(timestamp) {
+                const date = new Date(timestamp);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
 
-            saveEntries() {
-                try {
-                    localStorage.setItem('progressTrackerEntries', JSON.stringify(this.entries));
-                } catch (error) {
-                    console.error('Error saving entries:', error);
-                    alert('Failed to save entries. Please check your browser storage.');
-                }
+                if (diffMins < 1) return 'Just now';
+                if (diffMins < 60) return `${diffMins}m ago`;
+
+                const diffHours = Math.floor(diffMins / 60);
+                if (diffHours < 24) return `${diffHours}h ago`;
+
+                const diffDays = Math.floor(diffHours / 24);
+                if (diffDays < 7) return `${diffDays}d ago`;
+
+                return date.toLocaleDateString();
             }
         }
 
