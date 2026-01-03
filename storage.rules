@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for Progress Tracker
+// These rules allow public read/write access to progress images
+// since this is a public forum without authentication
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Progress images - allow public access
+    match /progress-images/{entryId}/{imageFile} {
+      // Allow anyone to read images
+      allow read: if true;
+
+      // Allow anyone to upload images
+      allow write: if true;
+
+      // Allow anyone to delete images
+      allow delete: if true;
+    }
+  }
+}
