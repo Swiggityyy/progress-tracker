@@ -898,17 +898,33 @@
                         // Generate unique ID for new entries or use existing ID for edits
                         const entryId = this.editingEntryId || push(ref(database, 'entries')).key;
 
+                        console.log('Starting image upload...', {
+                            entryId,
+                            blobSize: this.compressedImageBlob.size,
+                            blobType: this.compressedImageBlob.type
+                        });
+
                         // Upload compressed image to Firebase Storage
                         const imageRef = storageRef(storage, `progress-images/${entryId}/image.jpg`);
+                        console.log('Uploading to:', `progress-images/${entryId}/image.jpg`);
+
                         await uploadBytes(imageRef, this.compressedImageBlob);
+                        console.log('Upload complete, getting download URL...');
+
                         imageUrl = await getDownloadURL(imageRef);
+                        console.log('Got download URL:', imageUrl);
 
                         // Re-enable submit button
                         submitBtn.disabled = false;
                         submitBtn.textContent = 'Post Progress';
                     } catch (error) {
                         console.error('Error uploading image:', error);
-                        alert('Failed to upload image. Please try again.');
+                        console.error('Error details:', {
+                            code: error.code,
+                            message: error.message,
+                            name: error.name
+                        });
+                        alert(`Failed to upload image: ${error.message}\n\nPlease check Firebase Storage permissions.`);
                         const submitBtn = document.querySelector('.btn-primary');
                         submitBtn.disabled = false;
                         submitBtn.textContent = 'Post Progress';
