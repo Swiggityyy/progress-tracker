@@ -308,12 +308,36 @@
             color: #6c757d;
         }
 
-        .entry-image {
+        .entry-images-gallery {
             margin: 10px 0;
+            display: grid;
+            gap: 8px;
+        }
+
+        .entry-images-gallery.single {
+            grid-template-columns: 1fr;
+        }
+
+        .entry-images-gallery.two {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .entry-images-gallery.multiple {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .entry-image {
             border-radius: 10px;
-            max-width: 100%;
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
             cursor: pointer;
             transition: transform 0.2s;
+        }
+
+        .entry-images-gallery.single .entry-image {
+            height: auto;
+            max-height: 400px;
         }
 
         .entry-image:hover {
@@ -324,47 +348,64 @@
             border: 2px dashed #e0e0e0;
             padding: 15px;
             border-radius: 10px;
-            text-align: center;
         }
 
-        #previewImg {
-            display: block;
-            margin: 0 auto 10px;
+        #previewImagesContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
         }
 
-        #removeImageBtn {
+        .preview-image-wrapper {
+            position: relative;
+        }
+
+        .preview-img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .remove-preview-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
             background: #dc3545;
             color: white;
             border: none;
-            padding: 6px 14px;
-            border-radius: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.8em;
+            line-height: 1;
         }
 
-        #removeImageBtn:hover {
+        .remove-preview-btn:hover {
             background: #c82333;
         }
 
         /* Reactions Section */
         .reactions-section {
-            display: flex;
-            gap: 8px;
+            display: inline-flex;
+            gap: 6px;
             margin: 10px 0;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .reaction-button {
             background: white;
             border: 2px solid #e0e0e0;
             border-radius: 20px;
-            padding: 4px 10px;
-            font-size: 1.1em;
+            padding: 3px 8px;
+            font-size: 0.95em;
             cursor: pointer;
             transition: all 0.2s;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             position: relative;
         }
 
@@ -386,12 +427,30 @@
 
         .add-reaction-btn {
             background: transparent;
-            border: 2px dashed #e0e0e0;
-            font-size: 1.2em;
+            border: 1px dashed #e0e0e0;
+            font-size: 0.9em;
+            padding: 2px 8px;
+            opacity: 0.5;
+            transition: all 0.2s;
         }
 
         .add-reaction-btn:hover {
             border-color: #667eea;
+            opacity: 1;
+        }
+
+        .comment-item .reactions-section {
+            margin: 6px 0 4px 0;
+        }
+
+        .comment-item .reaction-button {
+            font-size: 0.85em;
+            padding: 2px 6px;
+        }
+
+        .comment-item .add-reaction-btn {
+            font-size: 0.8em;
+            padding: 2px 6px;
         }
 
         .reaction-tooltip {
@@ -634,14 +693,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="imageUpload">Add Image (optional)</label>
-                    <input type="file" id="imageUpload" accept="image/*">
-                    <div class="form-hint">JPG, PNG, GIF up to 5MB (auto-compressed for faster upload)</div>
+                    <label for="imageUpload">Add Images (optional)</label>
+                    <input type="file" id="imageUpload" accept="image/*" multiple>
+                    <div class="form-hint">Select multiple images - JPG, PNG, GIF up to 5MB each (auto-compressed)</div>
                 </div>
 
                 <div id="imagePreview" style="display: none;">
-                    <img id="previewImg" alt="Preview" style="max-width: 100%; max-height: 200px; border-radius: 10px;">
-                    <button type="button" id="removeImageBtn">Remove Image</button>
+                    <div id="previewImagesContainer"></div>
                 </div>
 
                 <div class="form-group">
@@ -702,7 +760,7 @@
             constructor() {
                 this.entries = [];
                 this.editingEntryId = null;
-                this.compressedImageBlob = null;
+                this.compressedImageBlobs = []; // Array for multiple images
                 this.comments = {}; // Store comments by entryId
                 this.reactions = {}; // Store reactions by entryId
                 this.collapsedComments = new Set(); // Track which comment sections are collapsed
@@ -755,10 +813,6 @@
                 document.getElementById('imageUpload').addEventListener('change', (e) => {
                     this.handleImageSelect(e);
                 });
-
-                document.getElementById('removeImageBtn').addEventListener('click', () => {
-                    this.removeImage();
-                });
             }
 
             autoCalculateDuration() {
@@ -772,45 +826,71 @@
             }
 
             async handleImageSelect(e) {
-                const file = e.target.files[0];
-                if (!file) return;
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
 
-                // Validate file size (5MB before compression)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Image must be less than 5MB');
-                    e.target.value = '';
-                    return;
-                }
+                const previewContainer = document.getElementById('previewImagesContainer');
+                const previewSection = document.getElementById('imagePreview');
 
-                try {
-                    // Compress the image
-                    const compressedBlob = await this.compressImage(file);
-                    this.compressedImageBlob = compressedBlob;
+                for (const file of files) {
+                    // Validate file size (5MB before compression)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert(`${file.name} is too large. Images must be less than 5MB`);
+                        continue;
+                    }
 
-                    // Show preview of compressed image
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        document.getElementById('previewImg').src = event.target.result;
-                        document.getElementById('imagePreview').style.display = 'block';
+                    try {
+                        // Compress the image
+                        const compressedBlob = await this.compressImage(file);
+                        this.compressedImageBlobs.push(compressedBlob);
 
-                        // Show compression stats
-                        const originalSize = (file.size / 1024).toFixed(2);
-                        const compressedSize = (compressedBlob.size / 1024).toFixed(2);
-                        console.log(`Image compressed: ${originalSize}KB → ${compressedSize}KB`);
-                    };
-                    reader.readAsDataURL(compressedBlob);
-                } catch (error) {
-                    console.error('Error compressing image:', error);
-                    alert('Failed to process image. Please try another image.');
-                    e.target.value = '';
+                        // Show preview of compressed image
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'preview-image-wrapper';
+
+                            const img = document.createElement('img');
+                            img.className = 'preview-img';
+                            img.src = event.target.result;
+
+                            const removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'remove-preview-btn';
+                            removeBtn.textContent = '×';
+                            removeBtn.addEventListener('click', () => {
+                                const index = Array.from(previewContainer.children).indexOf(wrapper);
+                                this.compressedImageBlobs.splice(index, 1);
+                                wrapper.remove();
+                                if (this.compressedImageBlobs.length === 0) {
+                                    previewSection.style.display = 'none';
+                                    document.getElementById('imageUpload').value = '';
+                                }
+                            });
+
+                            wrapper.appendChild(img);
+                            wrapper.appendChild(removeBtn);
+                            previewContainer.appendChild(wrapper);
+                            previewSection.style.display = 'block';
+
+                            // Show compression stats
+                            const originalSize = (file.size / 1024).toFixed(2);
+                            const compressedSize = (compressedBlob.size / 1024).toFixed(2);
+                            console.log(`${file.name} compressed: ${originalSize}KB → ${compressedSize}KB`);
+                        };
+                        reader.readAsDataURL(compressedBlob);
+                    } catch (error) {
+                        console.error('Error compressing image:', error);
+                        alert(`Failed to process ${file.name}. Please try another image.`);
+                    }
                 }
             }
 
-            removeImage() {
+            removeAllImages() {
                 document.getElementById('imageUpload').value = '';
-                document.getElementById('previewImg').src = '';
+                document.getElementById('previewImagesContainer').innerHTML = '';
                 document.getElementById('imagePreview').style.display = 'none';
-                this.compressedImageBlob = null;
+                this.compressedImageBlobs = [];
             }
 
             async compressImage(file, maxWidth = 1200, quality = 0.8) {
@@ -967,16 +1047,32 @@
                 description.textContent = entry.description;
                 card.appendChild(description);
 
-                // Image (if exists)
-                if (entry.imageUrl) {
-                    const image = document.createElement('img');
-                    image.className = 'entry-image';
-                    image.src = entry.imageUrl;
-                    image.alt = 'Progress image';
-                    image.addEventListener('click', () => {
-                        window.open(entry.imageUrl, '_blank');
+                // Images (if exists) - supports both single imageUrl and multiple imageUrls
+                const imageUrls = entry.imageUrls || (entry.imageUrl ? [entry.imageUrl] : []);
+                if (imageUrls.length > 0) {
+                    const gallery = document.createElement('div');
+                    gallery.className = 'entry-images-gallery';
+
+                    if (imageUrls.length === 1) {
+                        gallery.classList.add('single');
+                    } else if (imageUrls.length === 2) {
+                        gallery.classList.add('two');
+                    } else {
+                        gallery.classList.add('multiple');
+                    }
+
+                    imageUrls.forEach(url => {
+                        const image = document.createElement('img');
+                        image.className = 'entry-image';
+                        image.src = url;
+                        image.alt = 'Progress image';
+                        image.addEventListener('click', () => {
+                            window.open(url, '_blank');
+                        });
+                        gallery.appendChild(image);
                     });
-                    card.appendChild(image);
+
+                    card.appendChild(gallery);
                 }
 
                 // Meta info
@@ -1136,7 +1232,7 @@
                 document.getElementById('entryDate').value = today;
 
                 // Clear image preview
-                this.removeImage();
+                this.removeAllImages();
 
                 document.getElementById('entryModal').classList.add('active');
             }
@@ -1154,7 +1250,7 @@
                 document.getElementById('duration').value = entry.duration || '';
 
                 // Clear image preview (user can upload a new image if desired)
-                this.removeImage();
+                this.removeAllImages();
 
                 document.getElementById('entryModal').classList.add('active');
             }
@@ -1163,7 +1259,7 @@
                 document.getElementById('entryModal').classList.remove('active');
                 this.editingEntryId = null;
                 // Clear image preview
-                this.removeImage();
+                this.removeAllImages();
             }
 
             async saveEntry() {
@@ -1197,46 +1293,50 @@
                     duration = this.calculateDuration(startTime, endTime);
                 }
 
-                // Handle image upload
-                let imageUrl = null;
+                // Handle multiple image uploads
+                let imageUrls = [];
 
-                if (this.compressedImageBlob) {
+                if (this.compressedImageBlobs.length > 0) {
                     try {
                         // Disable submit button during upload
                         const submitBtn = document.querySelector('.btn-primary');
                         submitBtn.disabled = true;
-                        submitBtn.textContent = 'Uploading...';
+                        submitBtn.textContent = `Uploading ${this.compressedImageBlobs.length} image(s)...`;
 
                         // Generate unique ID for new entries or use existing ID for edits
                         const entryId = this.editingEntryId || push(ref(database, 'entries')).key;
 
-                        console.log('Starting image upload...', {
+                        console.log('Starting image uploads...', {
                             entryId,
-                            blobSize: this.compressedImageBlob.size,
-                            blobType: this.compressedImageBlob.type
+                            count: this.compressedImageBlobs.length
                         });
 
-                        // Upload compressed image to Firebase Storage
-                        const imageRef = storageRef(storage, `progress-images/${entryId}/image.jpg`);
-                        console.log('Uploading to:', `progress-images/${entryId}/image.jpg`);
+                        // Upload all images
+                        for (let i = 0; i < this.compressedImageBlobs.length; i++) {
+                            const blob = this.compressedImageBlobs[i];
+                            const imageRef = storageRef(storage, `progress-images/${entryId}/image-${i}.jpg`);
 
-                        await uploadBytes(imageRef, this.compressedImageBlob);
-                        console.log('Upload complete, getting download URL...');
+                            await uploadBytes(imageRef, blob);
+                            const url = await getDownloadURL(imageRef);
+                            imageUrls.push(url);
 
-                        imageUrl = await getDownloadURL(imageRef);
-                        console.log('Got download URL:', imageUrl);
+                            // Update progress
+                            submitBtn.textContent = `Uploading ${i + 1}/${this.compressedImageBlobs.length}...`;
+                        }
+
+                        console.log('All uploads complete:', imageUrls);
 
                         // Re-enable submit button
                         submitBtn.disabled = false;
                         submitBtn.textContent = 'Post Progress';
                     } catch (error) {
-                        console.error('Error uploading image:', error);
+                        console.error('Error uploading images:', error);
                         console.error('Error details:', {
                             code: error.code,
                             message: error.message,
                             name: error.name
                         });
-                        alert(`Failed to upload image: ${error.message}\n\nPlease check Firebase Storage permissions.`);
+                        alert(`Failed to upload images: ${error.message}\n\nPlease check Firebase Storage permissions.`);
                         const submitBtn = document.querySelector('.btn-primary');
                         submitBtn.disabled = false;
                         submitBtn.textContent = 'Post Progress';
@@ -1257,9 +1357,9 @@
                         updatedAt: Date.now()
                     };
 
-                    // Add imageUrl if a new image was uploaded
-                    if (imageUrl) {
-                        updates.imageUrl = imageUrl;
+                    // Add imageUrls if new images were uploaded
+                    if (imageUrls.length > 0) {
+                        updates.imageUrls = imageUrls;
                     }
 
                     update(entryRef, updates)
@@ -1279,7 +1379,7 @@
                         startTime: startTime || null,
                         endTime: endTime || null,
                         duration,
-                        imageUrl: imageUrl || null,
+                        imageUrls: imageUrls.length > 0 ? imageUrls : null,
                         createdAt: Date.now()
                     };
 
@@ -1297,19 +1397,31 @@
             async deleteEntry(entryId) {
                 if (confirm('Are you sure you want to delete this progress post?')) {
                     try {
-                        // Find the entry to check if it has an image
+                        // Find the entry to check if it has images
                         const entry = this.entries.find(e => e.id === entryId);
 
-                        // Delete image from storage if it exists
-                        if (entry && entry.imageUrl) {
-                            try {
-                                // Extract the path from the URL
-                                const imagePath = `progress-images/${entryId}`;
-                                const imageRef = storageRef(storage, imagePath);
-                                await deleteObject(imageRef);
-                            } catch (error) {
-                                console.error('Error deleting image:', error);
-                                // Continue with entry deletion even if image deletion fails
+                        // Delete images from storage if they exist
+                        if (entry) {
+                            const imageUrls = entry.imageUrls || (entry.imageUrl ? [entry.imageUrl] : []);
+                            for (let i = 0; i < imageUrls.length; i++) {
+                                try {
+                                    const imagePath = `progress-images/${entryId}/image-${i}.jpg`;
+                                    const imageRef = storageRef(storage, imagePath);
+                                    await deleteObject(imageRef);
+                                } catch (error) {
+                                    console.error('Error deleting image:', error);
+                                    // Continue with next image deletion
+                                }
+                            }
+                            // Also try to delete old single image format
+                            if (entry.imageUrl) {
+                                try {
+                                    const imagePath = `progress-images/${entryId}/image.jpg`;
+                                    const imageRef = storageRef(storage, imagePath);
+                                    await deleteObject(imageRef);
+                                } catch (error) {
+                                    console.error('Error deleting old format image:', error);
+                                }
                             }
                         }
 
