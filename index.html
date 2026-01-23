@@ -29,9 +29,89 @@
             padding: 20px;
         }
 
-        .container {
-            max-width: 900px;
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 20px;
+            max-width: 1600px;
             margin: 0 auto;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar h3 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .sidebar-content {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .instruction-item {
+            margin-bottom: 15px;
+        }
+
+        .instruction-item strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .user-info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .user-info-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-info-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .user-info-value {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: block;
+            border: 3px solid #667eea;
+        }
+
+        .user-name-display {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -627,6 +707,17 @@
             margin-top: 8px;
         }
 
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8em;
@@ -657,24 +748,83 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Progress Tracker Forum</h1>
-            <p>Share your daily progress with everyone!</p>
-            <button class="add-btn" id="addProgressBtn">+ Share Progress</button>
+    <div class="main-layout">
+        <!-- Left Sidebar: Instructions -->
+        <div class="sidebar" id="leftSidebar">
+            <h3>How to Use</h3>
+            <div class="sidebar-content">
+                <div class="instruction-item">
+                    <strong>📝 Share Progress</strong>
+                    Click "+ Share Progress" to post your daily accomplishments with optional images and time tracking.
+                </div>
+                <div class="instruction-item">
+                    <strong>🎭 React with Emojis</strong>
+                    Click the "+" button or existing reactions on posts and comments to add 👍 ❤️ 😂 🎉 🚀
+                </div>
+                <div class="instruction-item">
+                    <strong>💬 Comment & Reply</strong>
+                    Click "Show comments" to view and add comments. Click "Reply" to create threaded discussions.
+                </div>
+                <div class="instruction-item">
+                    <strong>✏️ Edit & Delete</strong>
+                    You can edit or delete your own posts and comments. Your name is saved for quick posting.
+                </div>
+                <div class="instruction-item">
+                    <strong>🖼️ Multiple Images</strong>
+                    Upload multiple images per post. They'll display in a responsive gallery.
+                </div>
+                <div class="instruction-item">
+                    <strong>👀 See Who Reacted</strong>
+                    Hover over any reaction to see the names of everyone who reacted.
+                </div>
+            </div>
         </div>
 
-        <div class="loading" id="loadingState">
-            Loading progress posts...
+        <!-- Main Content -->
+        <div class="container">
+            <div class="header">
+                <h1>Progress Tracker Forum</h1>
+                <p>Share your daily progress with everyone!</p>
+                <button class="add-btn" id="addProgressBtn">+ Share Progress</button>
+            </div>
+
+            <div class="loading" id="loadingState">
+                Loading progress posts...
+            </div>
+
+            <div class="entries-container" id="entriesContainer" style="display: none;">
+                <!-- Entries will be rendered here -->
+            </div>
+
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <p>No progress posts yet.</p>
+                <p style="font-size: 0.95em;">Be the first to share your progress!</p>
+            </div>
         </div>
 
-        <div class="entries-container" id="entriesContainer" style="display: none;">
-            <!-- Entries will be rendered here -->
-        </div>
-
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <p>No progress posts yet.</p>
-            <p style="font-size: 0.95em;">Be the first to share your progress!</p>
+        <!-- Right Sidebar: User Info -->
+        <div class="sidebar" id="rightSidebar">
+            <h3>Your Profile</h3>
+            <div class="sidebar-content">
+                <img class="user-avatar" id="userAvatar" src="" alt="Your avatar">
+                <div class="user-name-display" id="userNameDisplay">Not logged in</div>
+                <div class="user-info-item">
+                    <span class="user-info-label">Posts</span>
+                    <span class="user-info-value" id="userPostCount">0</span>
+                </div>
+                <div class="user-info-item">
+                    <span class="user-info-label">Comments</span>
+                    <span class="user-info-value" id="userCommentCount">0</span>
+                </div>
+                <div class="user-info-item">
+                    <span class="user-info-label">Reactions Given</span>
+                    <span class="user-info-value" id="userReactionCount">0</span>
+                </div>
+                <div class="user-info-item">
+                    <span class="user-info-label">Reactions Received</span>
+                    <span class="user-info-value" id="userReactionReceivedCount">0</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -772,6 +922,7 @@
             init() {
                 this.attachEventListeners();
                 this.loadEntries();
+                this.updateUserProfile();
             }
 
             attachEventListeners() {
@@ -965,6 +1116,7 @@
                 if (this.entries.length === 0) {
                     container.style.display = 'none';
                     emptyState.style.display = 'block';
+                    this.updateUserStats();
                     return;
                 }
 
@@ -978,6 +1130,8 @@
                     const dateSection = this.createDateSection(date, entries);
                     container.appendChild(dateSection);
                 });
+
+                this.updateUserStats();
             }
 
             groupEntriesByDate() {
@@ -1287,6 +1441,7 @@
 
                 // Save name to localStorage for next time
                 localStorage.setItem('userName', userName);
+                this.updateUserProfile();
 
                 // Calculate duration if not manually entered but times are provided
                 if (!duration && startTime && endTime) {
@@ -1652,6 +1807,8 @@
                         commentsList.appendChild(replyElement);
                     });
                 });
+
+                this.updateUserStats();
             }
 
             createCommentElement(comment, entryId, isReply = false) {
@@ -1837,6 +1994,100 @@
                     input.focus();
                     input.placeholder = 'Write a reply...';
                 }
+            }
+
+            // User Profile Methods
+            updateUserProfile() {
+                const savedName = localStorage.getItem('userName');
+                const userNameDisplay = document.getElementById('userNameDisplay');
+                const userAvatar = document.getElementById('userAvatar');
+
+                if (savedName) {
+                    userNameDisplay.textContent = savedName;
+                    // Use Robohash to generate a consistent avatar for the user
+                    userAvatar.src = `https://robohash.org/${savedName}?set=set4&size=80x80`;
+                } else {
+                    userNameDisplay.textContent = 'Not logged in';
+                    userAvatar.src = 'https://robohash.org/guest?set=set4&size=80x80';
+                }
+
+                this.updateUserStats();
+            }
+
+            updateUserStats() {
+                const savedName = localStorage.getItem('userName');
+                if (!savedName) {
+                    document.getElementById('userPostCount').textContent = '0';
+                    document.getElementById('userCommentCount').textContent = '0';
+                    document.getElementById('userReactionCount').textContent = '0';
+                    document.getElementById('userReactionReceivedCount').textContent = '0';
+                    return;
+                }
+
+                // Count user's posts
+                const userPosts = this.entries.filter(e => e.userName === savedName);
+                document.getElementById('userPostCount').textContent = userPosts.length;
+
+                // Count user's comments
+                let userCommentCount = 0;
+                Object.values(this.comments).forEach(entryComments => {
+                    userCommentCount += entryComments.filter(c => c.userName === savedName).length;
+                });
+                document.getElementById('userCommentCount').textContent = userCommentCount;
+
+                // Count reactions given by user
+                let reactionsGiven = 0;
+
+                // Count reactions on entries
+                this.entries.forEach(entry => {
+                    if (entry.reactions) {
+                        Object.values(entry.reactions).forEach(emojiUsers => {
+                            if (emojiUsers[savedName]) {
+                                reactionsGiven++;
+                            }
+                        });
+                    }
+                });
+
+                // Count reactions on comments
+                Object.values(this.comments).forEach(entryComments => {
+                    entryComments.forEach(comment => {
+                        if (comment.reactions) {
+                            Object.values(comment.reactions).forEach(emojiUsers => {
+                                if (emojiUsers[savedName]) {
+                                    reactionsGiven++;
+                                }
+                            });
+                        }
+                    });
+                });
+
+                document.getElementById('userReactionCount').textContent = reactionsGiven;
+
+                // Count reactions received on user's posts and comments
+                let reactionsReceived = 0;
+
+                // Reactions on user's posts
+                userPosts.forEach(entry => {
+                    if (entry.reactions) {
+                        Object.values(entry.reactions).forEach(emojiUsers => {
+                            reactionsReceived += Object.keys(emojiUsers).length;
+                        });
+                    }
+                });
+
+                // Reactions on user's comments
+                Object.values(this.comments).forEach(entryComments => {
+                    entryComments.forEach(comment => {
+                        if (comment.userName === savedName && comment.reactions) {
+                            Object.values(comment.reactions).forEach(emojiUsers => {
+                                reactionsReceived += Object.keys(emojiUsers).length;
+                            });
+                        }
+                    });
+                });
+
+                document.getElementById('userReactionReceivedCount').textContent = reactionsReceived;
             }
         }
 
