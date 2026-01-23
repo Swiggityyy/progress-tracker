@@ -346,6 +346,228 @@
             background: #c82333;
         }
 
+        /* Reactions Section */
+        .reactions-section {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .reaction-button {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+        }
+
+        .reaction-button:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .reaction-button.user-reacted {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .reaction-count {
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .add-reaction-btn {
+            background: transparent;
+            border: 2px dashed #e0e0e0;
+            font-size: 1.2em;
+        }
+
+        .add-reaction-btn:hover {
+            border-color: #667eea;
+        }
+
+        .reaction-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            margin-bottom: 5px;
+            z-index: 100;
+        }
+
+        .reaction-button:hover .reaction-tooltip {
+            opacity: 1;
+        }
+
+        /* Comments Section */
+        .comments-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comments-count {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.95em;
+        }
+
+        .toggle-comments-btn {
+            background: transparent;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            padding: 4px 8px;
+        }
+
+        .toggle-comments-btn:hover {
+            text-decoration: underline;
+        }
+
+        .comments-list {
+            margin: 10px 0;
+        }
+
+        .comment-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+
+        .comment-item.reply {
+            margin-left: 30px;
+            border-left: 3px solid #667eea;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .comment-time {
+            font-size: 0.75em;
+            color: #6c757d;
+        }
+
+        .comment-text {
+            font-size: 0.95em;
+            color: #333;
+            margin-bottom: 6px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 0.85em;
+        }
+
+        .comment-action-btn {
+            background: transparent;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 0.9em;
+        }
+
+        .comment-action-btn:hover {
+            color: #667eea;
+        }
+
+        .comment-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-family: inherit;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .comment-submit-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .comment-submit-btn:hover {
+            background: #5568d3;
+        }
+
+        .comment-cancel-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .comment-cancel-btn:hover {
+            background: #5a6268;
+        }
+
+        .edit-comment-form {
+            margin-top: 8px;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8em;
@@ -456,7 +678,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, push, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, push, onValue, remove, update, get, set } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
         // Firebase configuration
@@ -481,6 +703,11 @@
                 this.entries = [];
                 this.editingEntryId = null;
                 this.compressedImageBlob = null;
+                this.comments = {}; // Store comments by entryId
+                this.reactions = {}; // Store reactions by entryId
+                this.collapsedComments = new Set(); // Track which comment sections are collapsed
+                this.replyingTo = null; // Track which comment is being replied to
+                this.editingCommentId = null; // Track which comment is being edited
                 this.init();
             }
 
@@ -791,6 +1018,91 @@
 
                 card.appendChild(meta);
 
+                // Reactions section
+                const reactionsSection = this.createReactionsSection(entry.reactions || {}, entry.id, 'entry');
+                card.appendChild(reactionsSection);
+
+                // Comments section
+                const commentsSection = document.createElement('div');
+                commentsSection.className = 'comments-section';
+                commentsSection.id = `comments-section-${entry.id}`;
+
+                const commentsHeader = document.createElement('div');
+                commentsHeader.className = 'comments-header';
+
+                const commentCount = document.createElement('span');
+                commentCount.className = 'comments-count';
+                commentCount.id = `comment-count-${entry.id}`;
+                commentCount.textContent = '0 comments';
+                commentsHeader.appendChild(commentCount);
+
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'toggle-comments-btn';
+                toggleBtn.textContent = 'Show comments';
+                toggleBtn.addEventListener('click', () => {
+                    const container = document.getElementById(`comments-${entry.id}`);
+                    if (container.style.display === 'none') {
+                        container.style.display = 'block';
+                        toggleBtn.textContent = 'Hide comments';
+                        this.collapsedComments.delete(entry.id);
+                    } else {
+                        container.style.display = 'none';
+                        toggleBtn.textContent = 'Show comments';
+                        this.collapsedComments.add(entry.id);
+                    }
+                });
+                commentsHeader.appendChild(toggleBtn);
+
+                commentsSection.appendChild(commentsHeader);
+
+                // Comments container
+                const commentsContainer = document.createElement('div');
+                commentsContainer.id = `comments-${entry.id}`;
+                commentsContainer.style.display = 'none';
+
+                const commentsList = document.createElement('div');
+                commentsList.className = 'comments-list';
+                commentsContainer.appendChild(commentsList);
+
+                // Comment form
+                const commentForm = document.createElement('div');
+                commentForm.className = 'comment-form';
+
+                const commentInput = document.createElement('input');
+                commentInput.type = 'text';
+                commentInput.className = 'comment-input';
+                commentInput.id = `comment-input-${entry.id}`;
+                commentInput.placeholder = 'Write a comment...';
+                commentForm.appendChild(commentInput);
+
+                const commentSubmit = document.createElement('button');
+                commentSubmit.className = 'comment-submit-btn';
+                commentSubmit.textContent = 'Post';
+                commentSubmit.addEventListener('click', () => {
+                    const text = commentInput.value.trim();
+                    if (text) {
+                        this.addComment(entry.id, text, this.replyingTo);
+                        commentInput.value = '';
+                        commentInput.placeholder = 'Write a comment...';
+                    }
+                });
+                commentForm.appendChild(commentSubmit);
+
+                // Allow Enter key to submit
+                commentInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        commentSubmit.click();
+                    }
+                });
+
+                commentsContainer.appendChild(commentForm);
+                commentsSection.appendChild(commentsContainer);
+
+                card.appendChild(commentsSection);
+
+                // Load comments for this entry
+                this.loadCommentsForEntry(entry.id);
+
                 return card;
             }
 
@@ -1077,6 +1389,342 @@
                 if (diffDays < 7) return `${diffDays}d ago`;
 
                 return date.toLocaleDateString();
+            }
+
+            // Reactions Methods
+            toggleReaction(targetType, targetId, emoji) {
+                const savedName = localStorage.getItem('userName');
+                if (!savedName) {
+                    alert('Please set your name first by creating a post');
+                    return;
+                }
+
+                let reactionPath;
+                if (targetType === 'entry') {
+                    reactionPath = `entries/${targetId}/reactions/${emoji}/${savedName}`;
+                } else if (targetType === 'comment') {
+                    const commentId = targetId.replace('comment-', '');
+                    const comment = Object.values(this.comments).flat().find(c => c.id === commentId);
+                    if (!comment) return;
+                    reactionPath = `comments/${comment.entryId}/${commentId}/reactions/${emoji}/${savedName}`;
+                }
+
+                const reactionRef = ref(database, reactionPath);
+
+                get(reactionRef).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        remove(reactionRef);
+                    } else {
+                        set(reactionRef, true);
+                    }
+                });
+            }
+
+            createReactionsSection(reactions, targetId, targetType = 'entry') {
+                const section = document.createElement('div');
+                section.className = 'reactions-section';
+
+                const emojis = ['👍', '❤️', '😂', '🎉', '🚀'];
+                const savedName = localStorage.getItem('userName');
+
+                emojis.forEach(emoji => {
+                    const users = reactions[emoji] ? Object.keys(reactions[emoji]) : [];
+                    if (users.length > 0) {
+                        const button = document.createElement('button');
+                        button.className = 'reaction-button';
+                        if (savedName && users.includes(savedName)) {
+                            button.classList.add('user-reacted');
+                        }
+                        button.innerHTML = `${emoji} <span class="reaction-count">${users.length}</span>`;
+
+                        const tooltip = document.createElement('span');
+                        tooltip.className = 'reaction-tooltip';
+                        tooltip.textContent = users.join(', ');
+                        button.appendChild(tooltip);
+
+                        button.addEventListener('click', () => this.toggleReaction(targetType, targetId, emoji));
+                        section.appendChild(button);
+                    }
+                });
+
+                const addBtn = document.createElement('button');
+                addBtn.className = 'reaction-button add-reaction-btn';
+                addBtn.textContent = '+';
+                addBtn.title = 'Add reaction';
+
+                addBtn.addEventListener('click', () => {
+                    const picker = this.createEmojiPicker(emojis, (emoji) => {
+                        this.toggleReaction(targetType, targetId, emoji);
+                    });
+                    section.appendChild(picker);
+                    setTimeout(() => picker.remove(), 3000);
+                });
+
+                section.appendChild(addBtn);
+
+                return section;
+            }
+
+            createEmojiPicker(emojis, onSelect) {
+                const picker = document.createElement('div');
+                picker.style.cssText = 'display: inline-flex; gap: 5px; background: white; border: 2px solid #667eea; border-radius: 20px; padding: 5px; position: absolute; z-index: 10;';
+
+                emojis.forEach(emoji => {
+                    const btn = document.createElement('button');
+                    btn.textContent = emoji;
+                    btn.style.cssText = 'background: transparent; border: none; font-size: 1.3em; cursor: pointer; padding: 2px 6px; border-radius: 4px;';
+                    btn.addEventListener('mouseenter', () => btn.style.background = '#f0f0f0');
+                    btn.addEventListener('mouseleave', () => btn.style.background = 'transparent');
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        onSelect(emoji);
+                        picker.remove();
+                    });
+                    picker.appendChild(btn);
+                });
+
+                return picker;
+            }
+
+            // Comments Methods
+            loadCommentsForEntry(entryId) {
+                const entryCommentsRef = ref(database, `comments/${entryId}`);
+                onValue(entryCommentsRef, (snapshot) => {
+                    const data = snapshot.val();
+                    this.comments[entryId] = [];
+
+                    if (data) {
+                        Object.keys(data).forEach(key => {
+                            this.comments[entryId].push({
+                                id: key,
+                                ...data[key]
+                            });
+                        });
+
+                        this.comments[entryId].sort((a, b) => {
+                            if (!a.parentId && !b.parentId) return a.createdAt - b.createdAt;
+                            if (!a.parentId) return -1;
+                            if (!b.parentId) return 1;
+                            return a.createdAt - b.createdAt;
+                        });
+                    }
+
+                    this.renderCommentsForEntry(entryId);
+                });
+            }
+
+            renderCommentsForEntry(entryId) {
+                const commentsContainer = document.getElementById(`comments-${entryId}`);
+                if (!commentsContainer) return;
+
+                const comments = this.comments[entryId] || [];
+                const topLevelComments = comments.filter(c => !c.parentId);
+
+                const countElement = document.getElementById(`comment-count-${entryId}`);
+                if (countElement) {
+                    countElement.textContent = `${comments.length} comment${comments.length !== 1 ? 's' : ''}`;
+                }
+
+                const commentsList = commentsContainer.querySelector('.comments-list');
+                if (!commentsList) return;
+
+                commentsList.innerHTML = '';
+
+                topLevelComments.forEach(comment => {
+                    const commentElement = this.createCommentElement(comment, entryId);
+                    commentsList.appendChild(commentElement);
+
+                    const replies = comments.filter(c => c.parentId === comment.id);
+                    replies.forEach(reply => {
+                        const replyElement = this.createCommentElement(reply, entryId, true);
+                        commentsList.appendChild(replyElement);
+                    });
+                });
+            }
+
+            createCommentElement(comment, entryId, isReply = false) {
+                const div = document.createElement('div');
+                div.className = `comment-item${isReply ? ' reply' : ''}`;
+                div.id = `comment-${comment.id}`;
+
+                const header = document.createElement('div');
+                header.className = 'comment-header';
+
+                const author = document.createElement('span');
+                author.className = 'comment-author';
+                author.textContent = comment.userName;
+                header.appendChild(author);
+
+                const time = document.createElement('span');
+                time.className = 'comment-time';
+                time.textContent = this.formatTimestamp(comment.createdAt);
+                header.appendChild(time);
+
+                div.appendChild(header);
+
+                if (this.editingCommentId === comment.id) {
+                    const editForm = this.createEditCommentForm(comment, entryId);
+                    div.appendChild(editForm);
+                } else {
+                    const text = document.createElement('div');
+                    text.className = 'comment-text';
+                    text.textContent = comment.text;
+                    if (comment.updatedAt) {
+                        text.textContent += ' (edited)';
+                    }
+                    div.appendChild(text);
+                }
+
+                const reactionsSection = this.createReactionsSection(comment.reactions || {}, `comment-${comment.id}`, 'comment');
+                div.appendChild(reactionsSection);
+
+                const actions = document.createElement('div');
+                actions.className = 'comment-actions';
+
+                if (!isReply) {
+                    const replyBtn = document.createElement('button');
+                    replyBtn.className = 'comment-action-btn';
+                    replyBtn.textContent = 'Reply';
+                    replyBtn.addEventListener('click', () => this.startReplyToComment(comment.id, entryId));
+                    actions.appendChild(replyBtn);
+                }
+
+                const savedName = localStorage.getItem('userName');
+                if (savedName && savedName === comment.userName) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'comment-action-btn';
+                    editBtn.textContent = 'Edit';
+                    editBtn.addEventListener('click', () => this.startEditComment(comment.id, entryId));
+                    actions.appendChild(editBtn);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'comment-action-btn';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.addEventListener('click', () => this.deleteComment(comment.id, entryId));
+                    actions.appendChild(deleteBtn);
+                }
+
+                div.appendChild(actions);
+
+                return div;
+            }
+
+            addComment(entryId, text, parentId = null) {
+                const savedName = localStorage.getItem('userName');
+                if (!savedName) {
+                    alert('Please set your name first by creating a post');
+                    return;
+                }
+
+                if (!text.trim()) {
+                    alert('Please enter a comment');
+                    return;
+                }
+
+                const comment = {
+                    entryId,
+                    userName: savedName,
+                    text: text.trim(),
+                    createdAt: Date.now(),
+                    parentId: parentId || null,
+                    reactions: {}
+                };
+
+                const entryCommentsRef = ref(database, `comments/${entryId}`);
+                push(entryCommentsRef, comment)
+                    .then(() => {
+                        const input = document.getElementById(`comment-input-${entryId}`);
+                        if (input) {
+                            input.value = '';
+                            input.placeholder = 'Write a comment...';
+                        }
+                        this.replyingTo = null;
+                    })
+                    .catch((error) => {
+                        console.error('Error adding comment:', error);
+                        alert('Failed to add comment. Please try again.');
+                    });
+            }
+
+            updateComment(commentId, entryId, newText) {
+                if (!newText.trim()) {
+                    alert('Comment cannot be empty');
+                    return;
+                }
+
+                const commentRef = ref(database, `comments/${entryId}/${commentId}`);
+                update(commentRef, {
+                    text: newText.trim(),
+                    updatedAt: Date.now()
+                })
+                    .then(() => {
+                        this.editingCommentId = null;
+                    })
+                    .catch((error) => {
+                        console.error('Error updating comment:', error);
+                        alert('Failed to update comment. Please try again.');
+                    });
+            }
+
+            startEditComment(commentId, entryId) {
+                this.editingCommentId = commentId;
+                this.renderCommentsForEntry(entryId);
+            }
+
+            createEditCommentForm(comment, entryId) {
+                const form = document.createElement('div');
+                form.className = 'comment-form edit-comment-form';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'comment-input';
+                input.value = comment.text;
+                form.appendChild(input);
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'comment-submit-btn';
+                saveBtn.textContent = 'Save';
+                saveBtn.addEventListener('click', () => this.updateComment(comment.id, entryId, input.value));
+                form.appendChild(saveBtn);
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'comment-cancel-btn';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.addEventListener('click', () => {
+                    this.editingCommentId = null;
+                    this.renderCommentsForEntry(entryId);
+                });
+                form.appendChild(cancelBtn);
+
+                return form;
+            }
+
+            deleteComment(commentId, entryId) {
+                if (confirm('Delete this comment?')) {
+                    const replies = (this.comments[entryId] || []).filter(c => c.parentId === commentId);
+                    const deletePromises = replies.map(reply => {
+                        const replyRef = ref(database, `comments/${entryId}/${reply.id}`);
+                        return remove(replyRef);
+                    });
+
+                    const commentRef = ref(database, `comments/${entryId}/${commentId}`);
+                    deletePromises.push(remove(commentRef));
+
+                    Promise.all(deletePromises)
+                        .catch((error) => {
+                            console.error('Error deleting comment:', error);
+                            alert('Failed to delete comment. Please try again.');
+                        });
+                }
+            }
+
+            startReplyToComment(commentId, entryId) {
+                this.replyingTo = commentId;
+                const input = document.getElementById(`comment-input-${entryId}`);
+                if (input) {
+                    input.focus();
+                    input.placeholder = 'Write a reply...';
+                }
             }
         }
 
